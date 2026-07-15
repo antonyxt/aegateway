@@ -1,0 +1,13 @@
+# Ignore the local build directory
+/build/
+
+# Ignore local binaries if they are compiled in the root
+my_pi_binary
+
+# Ignore VS Code internal workspace configurations
+.vscode/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
