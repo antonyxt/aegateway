@@ -9,5 +9,14 @@ set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(ae_bridge_app main.cpp)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+)
+
+add_executable(ae_bridge_app ${SOURCES})
+
+target_include_directories(ae_bridge_app PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
