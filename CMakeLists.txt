@@ -1,28 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 project(PiApp CXX)
 
-# Force the ARM cross-compiler
-set(CMAKE_SYSTEM_NAME Linux)
-set(CMAKE_SYSTEM_PROCESSOR aarch64)
-set(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)
-set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)
-
-# Crucial Multiarch Configuration
-set(CMAKE_LIBRARY_ARCHITECTURE aarch64-linux-gnu)
-set(CMAKE_FIND_ROOT_PATH /)
-
-# Configure find paths: find libraries and headers exclusively in target system paths
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
-
-# Help CMake look precisely in the ARM multiarch library directories
-list(APPEND CMAKE_PREFIX_PATH "/usr/lib/aarch64-linux-gnu")
+# Removed cross-compilation overrides (SYSTEM_NAME, PROCESSOR, COMPILERS)
+# to let CMake automatically find the native system compilers.
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Find the Paho C++ package
+# Find the Paho C++ package natively installed on Debian
 find_package(PahoMqttCpp REQUIRED)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS

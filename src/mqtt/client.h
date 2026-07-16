@@ -18,9 +18,8 @@ public:
 
     ~MQTTClient();
 
-    bool connect(const std::string& username,
-                 const std::string& password,
-                 const std::string& caCertFile);
+    bool connect(const std::string& caCertFile,
+                 const std::string& clientBundleFile);
 
     void disconnect();
 

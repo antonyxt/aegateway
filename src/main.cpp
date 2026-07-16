@@ -32,7 +32,7 @@ void signalHandler(int signal) {
 int main() {
     // Initialize syslog for system logging (Debian/Linux standard)
     openlog("ae_bridge_app", LOG_PID | LOG_CONS, LOG_LOCAL0);
-    useSyslog = true;
+    useSyslog = false;
     
     logMessage(LOG_INFO, "=========================================");
     logMessage(LOG_INFO, " Hello Raspberry Pi!");
@@ -44,7 +44,7 @@ int main() {
     std::signal(SIGTERM, signalHandler);
 
     MQTTClient mqtt(
-    "ssl://mqtt.example.com:8883",
+    "ssl://localhost:8883",
     "gateway001");
 
     mqtt.setMessageCallback(
@@ -58,9 +58,8 @@ int main() {
         });
 
     if (!mqtt.connect(
-            "username",
-            "password",
-            "/etc/ssl/certs/ca.pem"))
+            "/home/pi/.mqtt_cert/ca.crt",
+            "/home/pi/.mqtt_cert/client_bundle.pem"))
     {
         logMessage(LOG_ERR, "Failed to connect to MQTT broker");
         closelog();
@@ -73,7 +72,7 @@ int main() {
     logMessage(LOG_INFO, "Subscribed to topic: gateway/001/cmd");
 
     mqtt.publish(
-        "gateway/001/status",
+        "ubuntu/tls",
         R"({"status":"online"})");
     logMessage(LOG_INFO, "Published online status");
 

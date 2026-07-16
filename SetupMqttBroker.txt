@@ -1,0 +1,57 @@
+on UBuntu wsl do below
+sudo apt update
+sudo apt install -y mosquitto mosquitto-clients openssl
+mkdir -p ~/mqtt_certs && cd ~/mqtt_certs
+
+1. Generate the Certificate Authority (CA)"
+openssl genrsa -out ca.key 2048
+openssl req -new -x509 -days 3650 -key ca.key -out ca.crt -subj "/CN=MyUbuntuWSL-CA"
+
+2. Generate the Broker Server Certificate:
+openssl genrsa -out server.key 2048
+openssl req -new -key server.key -out server.csr -subj "/CN=localhost"
+openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 3650 -sha256
+
+3. Generate the Client Certificate:
+openssl genrsa -out client.key 2048
+openssl req -new -key client.key -out client.csr -subj "/CN=ae_bridge_app"
+openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt -days 3650 -sha256
+
+3: Relocate Keys & Secure Permissions"
+sudo cp ca.crt /etc/mosquitto/ca_certificates/
+sudo cp server.crt server.key /etc/mosquitto/certs/
+
+# Tighten file system access permissions
+sudo chmod 600 /etc/mosquitto/certs/server.key
+sudo chown mosquitto:mosquitto /etc/mosquitto/certs/server.key
+
+4: Configure the Mosquitto Service
+sudo nano /etc/mosquitto/mosquitto.conf 
+
+copy below 
+# Standard unencrypted loopback
+listener 1883 0.0.0.0
+allow_anonymous true
+
+# Secure TLS listener
+listener 8883 0.0.0.0
+cafile /etc/mosquitto/ca_certificates/ca.crt
+certfile /etc/mosquitto/certs/server.crt
+keyfile /etc/mosquitto/certs/server.key
+
+# Enable Mutual TLS (Requires client certificates)
+require_certificate true
+use_identity_as_username true
+
+cat ~/mqtt_certs/client.crt ~/mqtt_certs/client.key > ~/mqtt_certs/client_bundle.pem
+provide ca.crt & client_bundle.pem to the pi client
+
+5. Restart mqtt Service
+sudo service mosquitto restart
+6. Start secure publisher
+// send a command
+mosquitto_pub -h localhost -p 8883 --cafile ~/mqtt_certs/ca.crt --cert ~/mqtt_certs/client.crt --key ~/mqtt_certs/client.key -t "ubuntu/tls" -m "Encrypted message via Ubuntu WSL!"
+
+// list all the command received by the broker run this  in ubuntu terminal
+mosquitto_sub -h localhost -p 8883 --cafile ~/mqtt_certs/ca.crt --cert ~/mqtt_certs/client.crt --key ~/mqtt_certs/client.key -t "#" -v
+

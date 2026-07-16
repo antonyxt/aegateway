@@ -20,35 +20,41 @@ MQTTClient::~MQTTClient()
     }
 }
 
-bool MQTTClient::connect(const std::string& username,
-                         const std::string& password,
-                         const std::string& caCertFile)
+bool MQTTClient::connect(const std::string& caCertFile, 
+                         const std::string& clientBundleFile)
 {
     try
     {
         mqtt::ssl_options ssl;
 
+        // 1. Trust store verifies the broker
         ssl.set_trust_store(caCertFile);
         ssl.set_enable_server_cert_auth(true);
 
-        connOpts_.set_ssl(ssl);
-        connOpts_.set_user_name(username);
-        connOpts_.set_password(password);
+        // 2. Client bundle sends both client certificate and private key
+        ssl.set_key_store(clientBundleFile);
+        ssl.set_private_key(clientBundleFile);
+
+        // 3. Attach SSL to connection options
+        connOpts_.set_ssl(ssl); // Note: modern Paho uses set_ssl_opts()
         connOpts_.set_clean_session(true);
         connOpts_.set_automatic_reconnect(true);
 
+        // Note: Removed set_user_name and set_password since 
+        // Mosquitto uses the client certificate identity for authentication instead.
+
         client_.connect(connOpts_)->wait();
 
-        std::cout << "MQTT connected\n";
-
+        std::cout << "MQTT connected securely via mTLS\n";
         return true;
     }
-    catch (const mqtt::exception& e)
+    catch (const mqtt::exception& exc)
     {
-        std::cerr << e.what() << std::endl;
+        std::cerr << "MQTT Connection error: " << exc.what() << "\n";
         return false;
     }
 }
+
 
 void MQTTClient::disconnect()
 {
